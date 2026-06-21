@@ -1,12 +1,20 @@
-import type { DemoState } from '../App'
+import type { DemoState, FlowType } from '../App'
 
 interface Props {
   state: DemoState
 }
 
+const flowApi: Record<FlowType, { name: string; host: string }> = {
+  sni: { name: 'Microsoft Graph', host: 'graph.microsoft.com' },
+  msi: { name: 'Azure Key Vault', host: 'tokenbinding.vault.azure.net' },
+  'fic-sni': { name: 'Microsoft Graph', host: 'graph.microsoft.com' },
+  'fic-msi': { name: 'Microsoft Graph', host: 'graph.microsoft.com' },
+}
+
 export default function MtlsPage({ state }: Props) {
   const step4 = state.steps.find(s => s.step === 4)
   const isActive = step4?.status === 'complete' || step4?.status === 'running'
+  const api = flowApi[state.activeFlow]
 
   return (
     <div className="animate-in">
@@ -52,8 +60,8 @@ export default function MtlsPage({ state }: Props) {
           {/* API side */}
           <div className="glow-card" style={{ width: 180, textAlign: 'center', padding: 20 }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>☁️</div>
-            <div style={{ fontSize: 12, fontWeight: 600 }}>Microsoft Graph</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>graph.microsoft.com</div>
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{api.name}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>{api.host}</div>
           </div>
         </div>
       </div>

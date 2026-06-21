@@ -1,18 +1,26 @@
-import type { DemoState } from '../App'
+import type { DemoState, FlowType } from '../App'
 
 interface Props {
   state: DemoState
   onRunDemo: () => void
 }
 
+const flowApiDetails: Record<FlowType, { name: string; endpoint: string; method: string }> = {
+  sni: { name: 'Microsoft Graph', endpoint: 'graph.microsoft.com/v1.0/applications', method: 'GET /v1.0/applications?$top=1' },
+  msi: { name: 'Azure Key Vault', endpoint: 'tokenbinding.vault.azure.net/secrets', method: 'GET /secrets/boundsecret/' },
+  'fic-sni': { name: 'Microsoft Graph', endpoint: 'graph.microsoft.com/v1.0/applications', method: 'GET /v1.0/applications?$top=1' },
+  'fic-msi': { name: 'Microsoft Graph', endpoint: 'graph.microsoft.com/v1.0/applications', method: 'GET /v1.0/applications?$top=1' },
+}
+
 export default function ApiCallPage({ state, onRunDemo }: Props) {
   const api = state.apiResult
+  const details = flowApiDetails[state.activeFlow]
 
   return (
     <div className="animate-in">
       <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>API Call</h2>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24 }}>
-        Certificate-bound access to Microsoft Graph
+        Certificate-bound access to {details.name}
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 24, alignItems: 'start' }}>
@@ -22,9 +30,9 @@ export default function ApiCallPage({ state, onRunDemo }: Props) {
             API Target
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
-            <div><span style={{ color: 'var(--text-muted)' }}>Service:</span> <span style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>Microsoft Graph</span></div>
-            <div><span style={{ color: 'var(--text-muted)' }}>Endpoint:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: 11 }}>graph.microsoft.com/v1.0/applications</span></div>
-            <div><span style={{ color: 'var(--text-muted)' }}>Method:</span> <span style={{ color: 'var(--text-secondary)' }}>GET /v1.0/applications?$top=1</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Service:</span> <span style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>{details.name}</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Endpoint:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: 11 }}>{details.endpoint}</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Method:</span> <span style={{ color: 'var(--text-secondary)' }}>{details.method}</span></div>
             <div><span style={{ color: 'var(--text-muted)' }}>Auth:</span> <span style={{ color: 'var(--text-secondary)' }}>Bearer + mTLS cert</span></div>
             <div><span style={{ color: 'var(--text-muted)' }}>Binding:</span> <span className="status-badge success" style={{ fontSize: 10 }}>Certificate Bound</span></div>
           </div>

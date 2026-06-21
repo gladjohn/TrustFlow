@@ -1,12 +1,44 @@
-import type { DemoState } from '../App'
+import type { DemoState, FlowType } from '../App'
 
 interface Props {
   state: DemoState
 }
 
+const flowParams: Record<FlowType, { authority: string; tenant: string; scope: string; identity: string; region: string }> = {
+  sni: {
+    authority: 'login.microsoftonline.com',
+    tenant: 'bea21ebe-8b64-...',
+    scope: 'https://graph.microsoft.com/.default',
+    identity: 'LabAuth.MSIDLab.com (SNI)',
+    region: 'westus3',
+  },
+  msi: {
+    authority: 'IMDS (169.254.169.254)',
+    tenant: 'System-Assigned',
+    scope: 'https://vault.azure.net',
+    identity: 'Managed Identity (SAMI)',
+    region: 'Auto-detected via IMDS',
+  },
+  'fic-sni': {
+    authority: 'login.microsoftonline.com',
+    tenant: 'bea21ebe-8b64-...',
+    scope: 'api://AzureADTokenExchange → Graph',
+    identity: 'LabAuth.MSIDLab.com (SNI → FIC)',
+    region: 'westus3',
+  },
+  'fic-msi': {
+    authority: 'IMDS → login.microsoftonline.com',
+    tenant: 'System-Assigned → FIC Exchange',
+    scope: 'api://AzureADTokenExchange → Graph',
+    identity: 'Managed Identity → FIC',
+    region: 'Auto-detected → westus3',
+  },
+}
+
 export default function TokenPage({ state }: Props) {
   const token = state.tokenResult
   const pop = state.popResult
+  const params = flowParams[state.activeFlow]
 
   return (
     <div className="animate-in">
@@ -22,11 +54,11 @@ export default function TokenPage({ state }: Props) {
             Request Parameters
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
-            <div><span style={{ color: 'var(--text-muted)' }}>Authority:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>login.microsoftonline.com</span></div>
-            <div><span style={{ color: 'var(--text-muted)' }}>Tenant:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>bea21ebe-8b64-...</span></div>
-            <div><span style={{ color: 'var(--text-muted)' }}>Scope:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>https://graph.microsoft.com/.default</span></div>
-            <div><span style={{ color: 'var(--text-muted)' }}>Certificate:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>LabAuth.MSIDLab.com (SNI)</span></div>
-            <div><span style={{ color: 'var(--text-muted)' }}>Region:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>westus3</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Authority:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{params.authority}</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Identity:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{params.tenant}</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Scope:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{params.scope}</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Credential:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{params.identity}</span></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Region:</span><br/><span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{params.region}</span></div>
           </div>
         </div>
 
