@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.AppConfig;
+using Microsoft.Identity.Client.KeyAttestation;
 
 namespace TrustFlow.Host;
 
@@ -23,8 +24,8 @@ public class BackendService
     private const string SniApiEndpoint = "https://graph.microsoft.com/v1.0/applications?$top=1";
     private const string SniApiName = "Microsoft Graph";
 
-    // MSI flow targets Azure Key Vault
-    private const string MsiScope = "https://vault.azure.net/.default";
+    // MSI flow targets Azure Key Vault (no /.default — MSAL adds it for MSI)
+    private const string MsiScope = "https://vault.azure.net";
     private const string MsiApiEndpoint = "https://tokenbinding.vault.azure.net/secrets?api-version=7.4";
     private const string MsiApiName = "Azure Key Vault";
 
@@ -381,6 +382,7 @@ public class BackendService
 
             var result = await msiApp.AcquireTokenForManagedIdentity(MsiScope)
                 .WithMtlsProofOfPossession()
+                .WithAttestationSupport()
                 .ExecuteAsync();
 
             sendProgress(JsonSerializer.Serialize(new { step = 4, status = "complete", label = "mTLS PoP Token", detail = $"PoP token acquired ({result.AuthenticationResultMetadata.TokenSource})" }));
@@ -533,6 +535,7 @@ public class BackendService
 
             var leg1Result = await msiApp.AcquireTokenForManagedIdentity("api://AzureADTokenExchange")
                 .WithMtlsProofOfPossession()
+                .WithAttestationSupport()
                 .ExecuteAsync();
 
             sendProgress(JsonSerializer.Serialize(new { step = 1, status = "complete", label = "MSI (Leg 1)", detail = "Exchange token via MSI" }));
