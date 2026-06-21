@@ -26,7 +26,7 @@ public class BackendService
 
     // MSI flow targets Azure Key Vault (no /.default — MSAL adds it for MSI)
     private const string MsiScope = "https://vault.azure.net";
-    private const string MsiApiEndpoint = "https://tokenbinding.vault.azure.net/secrets?api-version=7.4";
+    private const string MsiApiEndpoint = "https://tokenbinding.vault.azure.net/secrets/boundsecret/?api-version=2015-06-01";
     private const string MsiApiName = "Azure Key Vault";
 
     private X509Certificate2? _cachedCert;
@@ -399,11 +399,20 @@ public class BackendService
                 tokenPreview = result.AccessToken[..Math.Min(40, result.AccessToken.Length)] + "..."
             });
 
-            // Step 5: Downstream API (AKV)
+            // Step 5: Downstream API (AKV) - must use mTLS with binding cert
             sendProgress(JsonSerializer.Serialize(new { step = 5, status = "running", label = $"Calling {MsiApiName}" }));
-            using var httpClient = new HttpClient();
+            var bindingCert = result.BindingCertificate;
+            using var handler = new HttpClientHandler
+            {
+                ClientCertificateOptions = ClientCertificateOption.Manual,
+                SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                               System.Security.Authentication.SslProtocols.Tls13,
+                ClientCertificates = { bindingCert }
+            };
+            using var httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(result.TokenType, result.AccessToken);
+            httpClient.DefaultRequestHeaders.Add("x-ms-tokenboundauth", "true");
             var response = await httpClient.GetAsync(MsiApiEndpoint);
             var apiSuccess = response.IsSuccessStatusCode;
             var body = await response.Content.ReadAsStringAsync();
